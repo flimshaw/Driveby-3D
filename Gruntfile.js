@@ -53,6 +53,13 @@ module.exports = function(grunt) {
         src: ['lib/**/*.js', 'test/**/*.js']
       }
     },
+    sass: {
+      dist: {
+        files: {
+          'src/css/main.css': 'src/css/main.scss'
+        }
+      }
+    },
     qunit: {
       files: ['test/**/*.html']
     },
@@ -64,6 +71,10 @@ module.exports = function(grunt) {
       lib_test: {
         files: '<%= jshint.lib_test.src %>',
         tasks: ['jshint:lib_test', 'qunit']
+      },
+      sass: {
+        files: 'src/css/*.scss',
+        tasks: ['sass']
       }
     }
   });
@@ -74,6 +85,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-sass');
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);

@@ -30,7 +30,8 @@
             buttons: []
         };
 
-    var section;
+    var section
+      , video;
 
     // The actual plugin constructor
     function Plugin( element, options ) {
@@ -57,7 +58,11 @@
         // make our container easily accessible
         var self = this;
 
-        
+        video = self.element;
+
+        video.addEventListener('canplaythrough', function(e) {
+            video.play();
+        });
 
     };
 
