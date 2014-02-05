@@ -9,7 +9,7 @@
 // the semi-colon before the function invocation is a safety 
 // net against concatenated scripts and/or other plugins 
 // that are not closed properly.
-;define(['jquery'], function ( $ ) {
+;(function ( $ ) {
     
     // undefined is used here as the undefined global 
     // variable in ECMAScript 3 and is mutable (i.e. it can 
@@ -25,7 +25,7 @@
     // regularly referenced in your plugin).
 
     // CHANGE THE BELOW NAME TO REFLECT THE NAME OF THE PLUGIN ( i.e. $('#div').pluginName() )
-    var pluginName = 'Driveby-3D',
+    var pluginName = 'Driveby3D',
         defaults = {
             buttons: []
         };
@@ -57,6 +57,8 @@
         // make our container easily accessible
         var self = this;
 
+        
+
     };
 
     // A really lightweight plugin wrapper around the constructor, 
@@ -70,4 +72,4 @@
         });
     }
 
-});
+})(jQuery);
