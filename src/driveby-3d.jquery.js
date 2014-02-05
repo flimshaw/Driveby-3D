@@ -31,7 +31,11 @@
         };
 
     var section
-      , video;
+      , video
+      , camera
+      , scene
+      , renderer
+      , videoImage;
 
     // The actual plugin constructor
     function Plugin( element, options ) {
@@ -48,6 +52,7 @@
         this._name = pluginName;
         
         this.init();
+        
     }
 
     Plugin.prototype.init = function () {
@@ -61,10 +66,69 @@
         video = self.element;
 
         video.addEventListener('canplaythrough', function(e) {
+            video.muted = true;
             video.play();
+            animate();
         });
 
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 60, $(self.element).width() / $(self.element).height(), .1, 1000 );
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize( $(self.element).width(), $(self.element).height() );
+        $('body').append(renderer.domElement);
+
+        videoImage = document.createElement( 'canvas' );
+        videoImage.width = 1920;
+        videoImage.height = 1080;
+
+        videoImageContext = videoImage.getContext( '2d' );
+
+        // background color if no video present
+        videoImageContext.fillStyle = '#000000';
+        videoImageContext.fillRect( 0, 0, videoImage.width, videoImage.height );
+
+        texture = new THREE.Texture( videoImage );
+        texture.generateMipmaps = false;
+        texture.format = THREE.RGBFormat;
+
+        var movieMaterial = new THREE.MeshBasicMaterial( { map: texture, overdraw: true, side: THREE.DoubleSide } );
+
+        var movieGeometry = new THREE.PlaneGeometry( 240, 100, 4, 4 );
+        var movieScreen = new THREE.Mesh( movieGeometry, movieMaterial );
+        movieScreen.position.set(0,50,0);
+        scene.add(movieScreen);
+        
+        camera.position.set(0,150,300);
+        camera.lookAt(movieScreen.position);
+
     };
+
+    function animate() 
+    {
+        requestAnimationFrame( animate );
+        render();       
+        update();
+    }
+
+    function update()
+    {
+
+    }
+
+    function render() 
+    {   
+        if ( video.readyState === video.HAVE_ENOUGH_DATA ) 
+        {
+            videoImageContext.drawImage( video, 0, 0 );
+            if ( texture ) {
+                texture.needsUpdate = true; 
+            }
+                
+        }
+
+        renderer.render( scene, camera );
+    }
 
     // A really lightweight plugin wrapper around the constructor, 
     // preventing against multiple instantiations

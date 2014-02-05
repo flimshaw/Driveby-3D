@@ -1,5 +1,5 @@
 $(document).ready(function() {
 
-	$('.textureVideo').Driveby3D();
+	$('.texture-video').Driveby3D();
 
 });
