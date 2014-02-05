@@ -5,7 +5,10 @@
  * Licensed under the MIT license
  */
 
-
+var camera
+, texture
+, movieScreen
+, movieMaterial;
 // the semi-colon before the function invocation is a safety 
 // net against concatenated scripts and/or other plugins 
 // that are not closed properly.
@@ -32,10 +35,12 @@
 
     var section
       , video
-      , camera
       , scene
       , renderer
-      , videoImage;
+      , videoImage
+      , videoImageContext
+      , tempImage
+      , controls;
 
     // The actual plugin constructor
     function Plugin( element, options ) {
@@ -67,20 +72,34 @@
 
         video.addEventListener('canplaythrough', function(e) {
             video.muted = true;
+            video.loop = "loop";
             video.play();
             animate();
         });
 
+        var w = $(self.element).width();
+        var h = $(self.element).height()
+
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 60, $(self.element).width() / $(self.element).height(), .1, 1000 );
+        camera = new THREE.OrthographicCamera( w / -2, w / 2, h / 2, h / -2 );
 
         renderer = new THREE.WebGLRenderer();
         renderer.setSize( $(self.element).width(), $(self.element).height() );
         $('body').append(renderer.domElement);
 
+        //controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+        // CURRENT IMAGE
+        tempImage = document.createElement( 'canvas' );
+        tempImage.width = 1280;
+        tempImage.height = 960;
+
+        tempImageContext = tempImage.getContext( '2d' );
+
+        // CURRENT IMAGE
         videoImage = document.createElement( 'canvas' );
-        videoImage.width = 1920;
-        videoImage.height = 1080;
+        videoImage.width = 1280;
+        videoImage.height = 960;
 
         videoImageContext = videoImage.getContext( '2d' );
 
@@ -92,15 +111,47 @@
         texture.generateMipmaps = false;
         texture.format = THREE.RGBFormat;
 
-        var movieMaterial = new THREE.MeshBasicMaterial( { map: texture, overdraw: true, side: THREE.DoubleSide } );
 
-        var movieGeometry = new THREE.PlaneGeometry( 240, 100, 4, 4 );
-        var movieScreen = new THREE.Mesh( movieGeometry, movieMaterial );
-        movieScreen.position.set(0,50,0);
+
+        movieMaterial = new THREE.MeshBasicMaterial( { map: texture, blending: THREE.AdditiveBlending, transparent: true, side: THREE.DoubleSide } );
+        movieMaterial.opacity = 1;
+        movieMaterial.color.r = 0;
+        var movieGeometry = new THREE.PlaneGeometry( w, h, 4, 4 );
+        movieScreen = new THREE.Mesh( movieGeometry, movieMaterial );
+        movieScreen.position.set(0,0,-1);
         scene.add(movieScreen);
         
-        camera.position.set(0,150,300);
-        camera.lookAt(movieScreen.position);
+        camera.rotation.z = 90 * 0.0174532925;
+        //camera.position.set(1,1,1);
+        //camera.lookAt(movieScreen.position);
+
+        // PREV IMAGE
+        videoPrevImage = document.createElement( 'canvas' );
+        videoPrevImage.width = 1280;
+        videoPrevImage.height = 960;
+
+        
+        videoPrevImageContext = videoPrevImage.getContext( '2d' );
+        
+        // background color if no video present
+        videoPrevImageContext.fillStyle = '#000000';
+        videoPrevImageContext.fillRect( 0, 0, videoPrevImage.width, videoPrevImage.height ); 
+          
+        texturePrev = new THREE.Texture( videoPrevImage );
+        texturePrev.generateMipmaps = false;
+        texturePrev.format = THREE.RGBFormat;
+
+        prevMaterial = new THREE.MeshBasicMaterial( { map: texturePrev, blending: THREE.AdditiveBlending, transparent: true, side: THREE.DoubleSide } );
+        prevMaterial.opacity = 1;
+        prevMaterial.color.g = 0;
+        prevMaterial.color.b = 0;
+        var prevGeometry = new THREE.PlaneGeometry( w, h, 4, 4 );
+        prevScreen = new THREE.Mesh( movieGeometry, prevMaterial );
+        prevScreen.position.set(0,100,-1);
+
+        scene.add(prevScreen);
+        
+       
 
     };
 
@@ -113,18 +164,25 @@
 
     function update()
     {
-
+        if(controls) {
+         controls.update();  
+        }
+        
     }
 
     function render() 
     {   
-        if ( video.readyState === video.HAVE_ENOUGH_DATA ) 
+        if ( video.readyState === video.HAVE_ENOUGH_DATA && videoImageContext) 
         {
             videoImageContext.drawImage( video, 0, 0 );
+
             if ( texture ) {
-                texture.needsUpdate = true; 
+                texture.needsUpdate = true;
+                texturePrev.needsUpdate = true; 
             }
-                
+
+            videoPrevImageContext.drawImage( tempImage, 0, 0);
+            tempImageContext.drawImage(video, 0, 0)
         }
 
         renderer.render( scene, camera );
